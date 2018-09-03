@@ -1,9 +1,18 @@
 ---
 title: "Home"
-site: workflowr::wflow_site
 output:
-  workflowr::wflow_html:
-    toc: false
+  html_document:
+    toc: true
 ---
 
 Welcome to my research website.
+
+
+***
+
+
+## Pre-reading
+
+
+
+- 999
