@@ -5,14 +5,55 @@ output:
     toc: true
 ---
 
-Welcome to my research website.
+This is a website for organizing my work and persionally recording my everyday process. 
 
+If you have any question about this project, please feel free to contact me:
+[Ziwei LIU](https://github.com/ziweil8/live-demo), `ziweil8@student.unimelb.edu.au`.
 
 ***
 
+## Reading
 
-## Pre-reading
+### Biology
+
+#### [Oleg 2011]()
+
+- Statistical Aspects of ChIP-Seq Data Analysis
+- Paper: https://escholarship.org/uc/item/1ss936z1
+- Note: [link]()
+
+#### [Ingrid]()
+
+- Compare histone mark ChIP-seq abundance between libraries
+- Note: [link]()
+
+#### [Average PAC likelihood using SNPs]()
+
+- Removing Unwanted Variation
+Exploiting Negative Controls for High Dimensional Data
 
 
 
-- 999
+
+
+### Statistics
+
+#### [Terry Speed,2013]()
+
+- Removing Unwanted Variation from High Dimensional Data with Negative Controls
+- Paper: https://statistics.berkeley.edu/tech-reports/820
+- Note: [link]()
+
+#### [Bckground of RUV]()
+
+- Removing Unwanted Variation-Exploiting Negative Controls for High Dimensional Data
+- Note: [link]()
+
+***
+## Simulation
+#### [Repreduce the output]()
+- Regulation of H3K4me3 at Transcriptional Enhancers Characterizes Acquisition of Virus-Specific CD8+ T Cell-Lineage-Specific Function
+- Paper: https://www.cell.com/cell-reports/fulltext/S2211-1247(17)31779-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2211124717317795%3Fshowall%3Dtrue#secsectitle0130
+- Note: [link]()
+- process:[link]()
+
