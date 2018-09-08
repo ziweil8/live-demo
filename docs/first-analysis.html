@@ -347,7 +347,7 @@ div.section {
 </details>
 </li>
 <li>
-<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/ziweil8/live-demo/tree/fb9b1a75140b61f0e8f9a643531c1a86815f58e2" target="_blank">fb9b1a7</a> </summary></p>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/ziweil8/live-demo/tree/ea07f25b8ef12605907897ba6cb2f6abb750d89a" target="_blank">ea07f25</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -386,6 +386,40 @@ Message
 Rmd
 </td>
 <td style="text-align:left;">
+<a href="https://github.com/ziweil8/live-demo/blob/ea07f25b8ef12605907897ba6cb2f6abb750d89a/analysis/first-analysis.Rmd" target="_blank">ea07f25</a>
+</td>
+<td style="text-align:left;">
+ziweil8
+</td>
+<td style="text-align:left;">
+2018-09-08
+</td>
+<td style="text-align:left;">
+update
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/ziweil8/live-demo/9f1a863e1b9242771832709b14a5e652ef0bb8b6/docs/first-analysis.html" target="_blank">9f1a863</a>
+</td>
+<td style="text-align:left;">
+ziweil8
+</td>
+<td style="text-align:left;">
+2018-09-08
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
 <a href="https://github.com/ziweil8/live-demo/blob/fb9b1a75140b61f0e8f9a643531c1a86815f58e2/analysis/first-analysis.Rmd" target="_blank">fb9b1a7</a>
 </td>
 <td style="text-align:left;">
@@ -403,62 +437,90 @@ update
 </ul>
 <p></details></p>
 <hr />
+<hr />
 <div id="preprocess-data" class="section level2">
 <h2>preprocess data</h2>
-<div id="website-of-sra-datalink" class="section level3">
-<h3>Website of sra data<a href="https://www.ncbi.nlm.nih.gov/sra/?term=SRP049743">link</a></h3>
-<p>download command</p>
+<div id="download-data" class="section level3">
+<h3>download data</h3>
+<p>Website of sra data<a href="https://www.ncbi.nlm.nih.gov/sra/?term=SRP049743">link</a></p>
+<pre class="r"><code>module load SRA-Toolkit/2.8.2-1-centos_linux64
+prefetch -v SRRXXX </code></pre>
 <p>the sra data path:/vlsci/SG0010/ziwei/ncbi/public/sra</p>
 </div>
 <div id="convert-sra-to-fastq" class="section level3">
 <h3>Convert sra to fastq</h3>
+<pre class="r"><code>module load SRA-Toolkit/2.8.2-1-centos_linux64 
+fastq-dump --split-files SRRXXX.sra </code></pre>
 </div>
 <div id="move-fastq-to-another-path" class="section level3">
 <h3>Move fastq to another path</h3>
+<pre class="r"><code>mv *.fastq/vlsci/SG0010/shared/shared_data/external_public/Russ_2017/raw/fastq</code></pre>
 </div>
-<div id="download-refseqfasta" class="section level3">
-<h3>Download refseq(fasta)</h3>
+<div id="download-fasta" class="section level3">
+<h3>Download fasta</h3>
+<pre class="r"><code>wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.26_GRCm38.p6/GCF_000001635.26_GRCm38.p6_genomic.fna.gz 
+
+gunzip GCF_000001635.26_GRCm38.p6_genomic.fna.gz</code></pre>
 <p>the fasta data path:/vlsci/SG0010/shared/shared_data/external_public/Russ_2017/raw/fasta</p>
 </div>
 <div id="build-index" class="section level3">
 <h3>build index</h3>
+<pre class="r"><code>bowtie2-build refseq/*.file mm10_index/mm10_index </code></pre>
 <hr />
 </div>
 </div>
-<div id="mapping-readsfastq-to-refseqindex" class="section level2">
-<h2>Mapping reads(fastq) to refseq(index)</h2>
+<div id="mapping" class="section level2">
+<h2>Mapping</h2>
 <div id="create-scirpt" class="section level3">
 <h3>create scirpt</h3>
 <p>create script with the help of Job script generator for SLURM[<a href="https://www.melbournebioinformatics.org.au/jobscript-generator/" class="uri">https://www.melbournebioinformatics.org.au/jobscript-generator/</a>] details about some parameters Job Type:SMP CPU Cores:12 Memory in Gigabytes:100 hours:23 Modules: Bowtie2/2.3.2-vlsci_intel-2015.08.25</p>
-<p>commands of mapping</p>
+<pre class="r"><code>module load Bowtie2/2.3.2-vlsci_intel-2015.08.25
+bowtie2 [options]* -x &lt;bt2-idx&gt; {-1 &lt;m1&gt; -2 &lt;m2&gt; | -U &lt;r&gt; | --interleaved &lt;i&gt;} -S [&lt;sam&gt;]</code></pre>
 <p>for example</p>
+<pre class="r"><code>bowtie2 -x raw/fasta/index/mm10 -U raw/fastq/SRR1772989_1.fastq  -S output/SRR1772989_Chip-seq.sam   </code></pre>
 </div>
-<div id="new-or-edit-a-sbatch-file" class="section level3">
-<h3>new or edit a sbatch file</h3>
+<div id="new-a-sbatch-file" class="section level3">
+<h3>new a sbatch file</h3>
+<pre class="r"><code>vi filename.sbatch</code></pre>
 <p>cope all content of script to sbatch file and then press Esc (for exiting insertion statement)</p>
 <p>and then save and exit sbatch file</p>
+<pre class="r"><code>:wq ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.26_GRCm38.p6/GCF_000001635.26_GRCm38.p6_genomic.fna.gz</code></pre>
 </div>
 <div id="submit-sbatch-file" class="section level3">
 <h3>submit sbatch file</h3>
+<pre class="r"><code>sbatch filenam.sbatch</code></pre>
 </div>
 <div id="view-waiting-statement" class="section level3">
 <h3>view waiting statement</h3>
+<pre class="r"><code>showq -u ziwei
+or 
+squeue -u ziwei</code></pre>
 </div>
 <div id="path-of-mapping-output" class="section level3">
 <h3>path of mapping output</h3>
+<pre class="r"><code>/vlsci/SG0010/shared/shared_data/external_public/Russ_2017/output/sam</code></pre>
 <hr />
 </div>
 </div>
-<div id="compress-sam-file-to-bam-file" class="section level2">
-<h2>compress sam file to bam file</h2>
+<div id="sam-to-bam" class="section level2">
+<h2>sam to bam</h2>
+<pre class="r"><code>module load SAMtools/1.5-vlsci_intel-2015.08.25-HTSlib-1.5
+samtools view -S -b sample.sam &gt; sample.bam</code></pre>
 <div id="filter-reads-with-low-alignment-quality-10" class="section level3">
 <h3>Filter reads with low alignment quality 10</h3>
+<pre class="r"><code>samtools view -b -q 10 output/bam/SRR1772989.bam &gt; output/bam/filteredbam/SRR1772989.qfiltered10.bam</code></pre>
+<hr />
 </div>
 </div>
-<div id="convert-bamfile-to-hdf5" class="section level2">
-<h2>convert bamfile to hdf5</h2>
+<div id="bam-to-hdf5" class="section level2">
+<h2>bam to hdf5</h2>
 <div id="index-filtered-bam-files" class="section level3">
 <h3>Index filtered bam files</h3>
+<pre class="r"><code>samtools sort -o sorted.bam initial.bam
+samtools index sorted.bam</code></pre>
+</div>
+<div id="convert" class="section level3">
+<h3>convert</h3>
 <pre class="r"><code>python load_bam_5prime_ends.py --assembly hg19 /SRR1772989sorted.fwd /SRR1772989sorted.rev /sortedbam/SRR1772989sorted.bam</code></pre>
 </div>
 </div>
