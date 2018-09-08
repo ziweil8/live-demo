@@ -4,13 +4,14 @@ author: "ziweil8"
 date: "2018-09-03"
 output: workflowr::wflow_html
 ---
+***
 
 ## preprocess data 
 
-### Website of sra data[link](https://www.ncbi.nlm.nih.gov/sra/?term=SRP049743)
+### download data 
 
-download command
-```{r eval=FALSE, include=FALSE}
+Website of sra data[link](https://www.ncbi.nlm.nih.gov/sra/?term=SRP049743)
+```{r eval=FALSE}
 module load SRA-Toolkit/2.8.2-1-centos_linux64
 prefetch -v SRRXXX 
 ```
@@ -19,21 +20,20 @@ the sra data path:/vlsci/SG0010/ziwei/ncbi/public/sra
 
 ### Convert sra to fastq
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 module load SRA-Toolkit/2.8.2-1-centos_linux64 
 fastq-dump --split-files SRRXXX.sra 
-
 ```
 
 ### Move fastq to another path
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 mv *.fastq/vlsci/SG0010/shared/shared_data/external_public/Russ_2017/raw/fastq
 ```
 
-### Download refseq(fasta)
+### Download fasta
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.26_GRCm38.p6/GCF_000001635.26_GRCm38.p6_genomic.fna.gz 
 
 gunzip GCF_000001635.26_GRCm38.p6_genomic.fna.gz
@@ -43,13 +43,13 @@ the fasta data path:/vlsci/SG0010/shared/shared_data/external_public/Russ_2017/r
 
 ### build index
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 bowtie2-build refseq/*.file mm10_index/mm10_index 
 ```
 
 ***
 
-## Mapping reads(fastq) to refseq(index) 
+## Mapping
 
 ### create scirpt
 
@@ -61,22 +61,20 @@ Memory in Gigabytes:100
 hours:23
 Modules: Bowtie2/2.3.2-vlsci_intel-2015.08.25
 
-commands of mapping
-
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 module load Bowtie2/2.3.2-vlsci_intel-2015.08.25
 bowtie2 [options]* -x <bt2-idx> {-1 <m1> -2 <m2> | -U <r> | --interleaved <i>} -S [<sam>]
 ```
 
 for example
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 bowtie2 -x raw/fasta/index/mm10 -U raw/fastq/SRR1772989_1.fastq  -S output/SRR1772989_Chip-seq.sam   
 ```
 
-### new or edit a sbatch file
+### new a sbatch file
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 vi filename.sbatch
 ```
 
@@ -84,19 +82,19 @@ cope all content of script to sbatch file and then press Esc (for exiting insert
 
 and then save and exit sbatch file
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 :wq ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/635/GCF_000001635.26_GRCm38.p6/GCF_000001635.26_GRCm38.p6_genomic.fna.gz
 ```
 
 ###submit sbatch file
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 sbatch filenam.sbatch
 ```
 
 ### view waiting statement
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 showq -u ziwei
 or 
 squeue -u ziwei
@@ -104,34 +102,38 @@ squeue -u ziwei
 
 ### path of mapping output
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 /vlsci/SG0010/shared/shared_data/external_public/Russ_2017/output/sam
 ```
 
 ***
 
-## compress sam file to bam file
+## sam to bam
 
-```{r eval=FALSE, include=FALSE}
+```{r eval=FALSE}
 module load SAMtools/1.5-vlsci_intel-2015.08.25-HTSlib-1.5
 samtools view -S -b sample.sam > sample.bam
 ```
 
 ### Filter reads with low alignment quality 10
-```{r eval=FALSE, include=FALSE}
+
+```{r eval=FALSE}
 samtools view -b -q 10 output/bam/SRR1772989.bam > output/bam/filteredbam/SRR1772989.qfiltered10.bam
 ```
 
-## convert bamfile to hdf5
+***
+
+## bam to hdf5
 
 ### Index filtered bam files
-```{r eval=FALSE, include=FALSE}
+
+```{r eval=FALSE}
 samtools sort -o sorted.bam initial.bam
 samtools index sorted.bam
 ```
 
+### convert
+
 ```{r eval=FALSE}
 python load_bam_5prime_ends.py --assembly hg19 /SRR1772989sorted.fwd /SRR1772989sorted.rev /sortedbam/SRR1772989sorted.bam
-
-
 ```

@@ -5,10 +5,10 @@ output:
     toc: true
 ---
 
-This is a website for organizing my work and persionally recording my daily progress. 
+This is a website for organizing my work and personally recording my daily progress. 
 
 If you have any question about this project, please feel free to contact me:
-[Ziwei LIU](https://github.com/ziweil8/live-demo), `ziweil8@student.unimelb.edu.au`.
+[Ziwei LIU]() `ziweil8@student.unimelb.edu.au`.
 
 ***
 
