@@ -5,8 +5,8 @@ date: "2018-09-03"
 output: workflowr::wflow_html
 ---
 ***
-
 ## preprocess data 
+***
 
 ### download data 
 
@@ -48,8 +48,8 @@ bowtie2-build refseq/*.file mm10_index/mm10_index
 ```
 
 ***
-
 ## Mapping
+***
 
 ### create scirpt
 
@@ -107,8 +107,8 @@ squeue -u ziwei
 ```
 
 ***
-
 ## sam to bam
+***
 
 ```{r eval=FALSE}
 module load SAMtools/1.5-vlsci_intel-2015.08.25-HTSlib-1.5
@@ -122,8 +122,8 @@ samtools view -b -q 10 output/bam/SRR1772989.bam > output/bam/filteredbam/SRR177
 ```
 
 ***
-
 ## bam to hdf5
+***
 
 ### Index filtered bam files
 
