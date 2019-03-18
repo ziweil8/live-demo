@@ -41,13 +41,20 @@ If you have any question about this project, please feel free to contact me:
 - Removing Unwanted Variation-Exploiting Negative Controls for High Dimensional Data
 - Note: [link]()
 
+#### [Applied Bayesian and Classical Inference]()
 ***
 
-## Simulation
+## Implementation
 
 #### [Russ 2017]()
 - Regulation of H3K4me3 at Transcriptional Enhancers Characterizes Acquisition of Virus-Specific CD8+ T Cell-Lineage-Specific Function
 - Paper: [link](https://www.cell.com/cell-reports/fulltext/S2211-1247(17)31779-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2211124717317795%3Fshowall%3Dtrue#secsectitle0130)
 - Note: [link]()
 - process:[link](first-analysis)
+
+#### [The Federalist Papers]()
+- process:[link](Workflow of Federalist papers)
+
+
+
 

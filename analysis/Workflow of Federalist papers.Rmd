@@ -1,0 +1,332 @@
+---
+title: "Week 1 Workflow"
+output: html_document
+---
+***
+
+##Libraries
+```{r message=FALSE, warning=FALSE, include=TRUE, paged.print=FALSE}
+library(tidyverse)
+library(tidytext)
+library(gutenbergr)
+library(glmnet)
+library(tm)
+library(RColorBrewer)
+require(vcd)
+```
+
+
+***
+## Data 
+
+
+#### All The Federalist Papers can be found on gutenberg
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+papers <- gutenberg_download(1404)
+head(papers, n = 3)
+```
+
+
+
+#### Divide each paper up into sentences 
+
+Firstly collapsing all the lines together and splitting them by ".","!" and "?"
+```{r}
+papers_sentences <- pull(papers, text) %>% 
+  str_c(collapse = " ") %>%
+  str_split(pattern = "\\.|\\?|\\!") %>%
+  unlist() %>%
+  tibble(text = .) %>%
+  mutate(sentence = row_number())
+```
+
+
+
+#### Assign each of the 85 papers to the 3 authors and a group unknown papers
+
+```{r}
+hamilton <- c(1, 6:9, 11:13, 15:17, 21:36, 59:61, 65:85)
+madison <- c(10, 14, 18:20, 37:48)
+jay <- c(2:5, 64)
+unknown <- c(49:58, 62:63)
+papers_words <- papers_sentences %>% #indicate the start of a paper
+  mutate(no = cumsum(str_detect(text, regex("FEDERALIST No",
+                                            ignore_case = TRUE)))) %>%
+  unnest_tokens(word, text) %>%
+  mutate(author = case_when(no %in% hamilton ~ "hamilton",
+                            no %in% madison ~ "madison",
+                            no %in% jay ~ "jay",
+                            no %in% unknown ~ "unknown"),
+         id = no)
+```
+
+
+
+#### Exclude Jay
+
+```{r}
+papers_words <- papers_words %>%
+  filter(author != "jay")
+```
+
+
+
+#### Tokenize the text
+
+```{r}
+papers_words <- papers_sentences %>% #indicate the start of a paper
+  mutate(no = cumsum(str_detect(text, regex("FEDERALIST No",
+                                            ignore_case = TRUE)))) %>%
+  unnest_tokens(word, text) %>%
+  mutate(author = case_when(no %in% hamilton ~ "hamilton",
+                            no %in% madison ~ "madison",
+                            no %in% jay ~ "jay",
+                            no %in% unknown ~ "unknown"),
+         count = 1) %>% 
+  group_by(sentence) %>% 
+  filter(sum(count)>=15)  ##filtering out the sentences which length is less than 15 words
+```
+
+
+
+#### Generate the term-frequency matrix (also named doucument term matrix)
+
+Documents as the rows, terms/words as the columns, frequency of the term in the document as the entries.
+```{r}
+papers_dtm <- papers_words %>%
+  count(no, word, sort = TRUE) %>% 
+  cast_dtm(no, word, n)
+
+ham_dtm <- papers_words %>%
+  filter(author == "hamilton") %>%
+  count(no, word, sort = TRUE) %>% 
+  mutate(author="Hamilton") %>% 
+  cast_dtm(no, word, n)
+
+mad_dtm <- papers_words %>%
+  filter(author == "madison") %>%
+  count(no, word, sort = TRUE) %>% 
+  mutate(author="Madison") %>% 
+  cast_dtm(no, word, n)
+
+unk_dtm <- papers_words %>%
+  filter(author == "unknown") %>%
+  count(no, word, sort = TRUE) %>% 
+  mutate(author="Unknown") %>% 
+  cast_dtm(no, word, n)
+```
+
+
+
+#### Just a quick look of hamilton dtm
+
+```{r}
+inspect(ham_dtm[1:5, 1:5])
+```
+
+
+
+#### dylpr package requires data frame
+
+```{r}
+ham_data<-data.frame(as.matrix(ham_dtm))
+mad_data<-data.frame(as.matrix(mad_dtm))
+unk_data<-data.frame(as.matrix(unk_dtm))
+```
+
+
+***
+
+## Statistics
+
+
+### whether the length of sentences can be regard as a variable for discrimination
+
+
+#### Compute the lengths in words of the sentences
+```{r}
+ham_ls<- papers_words%>% 
+  filter(author=="hamilton") %>% 
+  group_by(sentence) %>% 
+  summarise(length=sum(count))
+
+mad_ls<- papers_words%>% 
+  filter(author=="madison") %>% 
+  group_by(sentence) %>% 
+  summarise(length=sum(count))
+```
+
+
+
+#### Compute mean and sd 
+
+```{r}
+ham_ls %>% 
+  summarise(mean=mean(length),sd=sd(length))
+mad_ls %>% 
+  summarise(mean=mean(length),sd=sd(length))
+```
+
+
+
+### Which words do they use the most ?
+
+
+#### Counts of words by author 
+
+```{r}
+cs.madison  <- colSums(as.matrix(mad_dtm))       
+cs.hamilton <- colSums(as.matrix(ham_dtm))
+Counts <- bind_rows(                                
+  data_frame(author="Madison",  word=names(cs.madison),  count=cs.madison),
+  data_frame(author="Hamilton", word=names(cs.hamilton), count=cs.hamilton))
+Counts
+```
+
+
+
+#### Compute the each word frequency per 1K words
+```{r}
+M<-data_frame(author="Madison",  word=names(cs.madison),  count=cs.madison)
+M <- M %>% 
+  mutate( Madison = 1000*count / sum(count)) %>% 
+  select(word,Madison)
+H<-data_frame(author="Hamilton", word=names(cs.hamilton), count=cs.hamilton)
+H <- H %>% 
+  mutate( Hamilton = 1000*count / sum(count)) %>% 
+  select(word,Hamilton) 
+HM<-left_join(H,M,by="word")
+
+HM
+```
+
+
+
+#### log-odds is more straightforword
+
+```{r}
+HM %>% 
+  mutate(log_ratio = log2( Hamilton / Madison)) %>% 
+  filter(Madison > 1.5 | Hamilton > 1.5) %>% 
+  mutate(word = reorder(word, log_ratio)) %>%
+  ggplot(aes(word,log_ratio)) +geom_col() + coord_flip() 
+
+```
+
+
+
+### which words can show the writing differences between the two authors？
+
+
+#### To compare some typical words suggested by predecessors
+
+```{r}
+Typ_mad<-mad_data/rowSums(mad_data)
+Typ_mad<-Typ_mad %>% 
+  select(by,from,to,war,tax,upon)
+
+Typ_ham<- ham_data/rowSums(ham_data)
+Typ_ham<-Typ_ham %>% 
+  select(by,from,to,war,tax,upon)
+
+Typ_joint<-rbind(data.frame(author="hamilton",count=Typ_ham)
+                    ,data.frame(author="madison",count=Typ_mad))
+colnames(Typ_joint)<-c("author","by", "from", "to", "war", "tax", "upon")
+
+par(mfrow=c(2,3))
+aut <- c("hamilton", "madison")
+for (w in c("by", "from", "to", "war", "tax", "upon")) {
+  boxplot(1000 * Typ_joint[,w] ~ Typ_joint$author, subset = Typ_joint$author %in% aut,
+          ylab="Frequency / 1K Words", main=w)
+}
+```
+
+### Modelling word occurrence
+
+
+#### Reload the federalist papers text
+
+```{r}
+load("FederalistPapers.sav")
+federalist <- FederalistPapers %>% 
+  filter(text != "") %>% 
+  mutate(paper_id=1:85)
+```
+
+#### First segment the texts into blocks of about 200 words
+
+```{r}
+block_size <- 200
+paper_id <- integer()
+block_text <- list()
+nblock <- 0
+
+for (i in seq_len(nrow(federalist))) {
+  # convert the text to a 'String' object to annote it
+  s <- NLP::as.String(federalist$text[[i]])
+  
+  # find the word boundaries
+  spans <- NLP::wordpunct_tokenizer(s)
+  nword <- length(spans)
+  
+  # form blocks of 'block_size' words
+  end <- 0
+  while (end < nword) {
+    # find the block boundaries
+    start <- end + 1
+    end <- min(start + block_size, nword)
+    block_span <- Span(spans[start]$start, spans[end]$end)
+    
+    # store the block in the 'block_text' array
+    nblock <- nblock + 1
+    block_text[[nblock]] <- as.character(s[block_span])
+    paper_id[[nblock]] <- i
+  }
+}
+
+block <- data_frame(block_id = seq_len(nblock), paper_id = paper_id,
+                    text = block_text)
+dtm_block <- DocumentTermMatrix(VCorpus(VectorSource(block$text)),
+                                control=list(removePunctuation = TRUE))
+dtm_block <- sparseMatrix(dtm_block$i, dtm_block$j, x = dtm_block$v,
+                          dim=dim(dtm_block), dimnames=dimnames(dtm_block))
+```
+
+#### To select a set of words
+
+```{r}
+words <- data.frame("may")
+words <- words%>% 
+  mutate_if(is.factor, as.character) 
+names(words)<-"word"
+```
+
+#### fit a poisson model for the word by poisson and negtive binomial model.
+
+```{r}
+h <- (block %>% left_join(federalist, by="paper_id")
+      %>% filter(author == "HAMILTON"))$block_id
+x <- dtm_block[h,]
+
+do(words%>% group_by(word), { # for each word:
+  # fit a poisson model for the word with parameters estimated by 'Ml'
+  y <- table(x[,.$word])
+  fit_poisson <- goodfit(y, type="poisson",method = "ML")
+  summary(fit_poisson)
+  plot(fit_poisson,scale="raw",type="standing")
+  lamda1<-data.frame(unlist(fit_poisson$par))
+  lamda1
+  })
+```
+
+```{r}
+do(words%>% group_by(word), { # for each word:
+  # fit a negative binomial model for the word when it shows a lack of fit of poisson distribution
+  y <- x[,.$word]
+  fit_nbinomial <- goodfit(y, type="nbinomial")
+  summary(fit_nbinomial)
+  plot(fit_nbinomial,scale="raw",type="standing")
+  lamda2<-data.frame(unlist(fit_nbinomial$par))
+  lamda2})
+```
